@@ -6,7 +6,6 @@ importable (and testable) anywhere, including slim CI images.
 from __future__ import annotations
 
 import json
-import pickle
 from dataclasses import asdict
 from pathlib import Path
 
@@ -70,8 +69,9 @@ class VectorStore:
         (path / "chunks.json").write_text(
             json.dumps([asdict(c) for c in self.chunks], indent=2), encoding="utf-8"
         )
-        with (path / "vectors.pkl").open("wb") as fh:
-            pickle.dump(self._matrix, fh)
+        # NumPy's non-pickle format is portable and safe to load from an
+        # untrusted deployment volume.
+        np.save(path / "vectors.npy", self._matrix, allow_pickle=False)
 
     @classmethod
     def load(cls, directory: str | Path, embedder: Embedder | None = None) -> VectorStore:
@@ -79,8 +79,7 @@ class VectorStore:
         store = cls(embedder)
         raw = json.loads((path / "chunks.json").read_text(encoding="utf-8"))
         store.chunks = [Chunk(**item) for item in raw]
-        with (path / "vectors.pkl").open("rb") as fh:
-            store._matrix = pickle.load(fh)
+        store._matrix = np.load(path / "vectors.npy", allow_pickle=False)
         return store
 
     def __len__(self) -> int:

@@ -8,6 +8,19 @@ evaluation harness.
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+## Architecture
+
+```mermaid
+flowchart LR
+  D[TXT / Markdown / PDF] --> C[Paragraph-aware chunking]
+  C --> E[Pluggable embeddings]
+  E --> V[FAISS or NumPy index]
+  Q[Question] --> E
+  V --> R[Ranked passages]
+  R --> G[Azure OpenAI or extractive fallback]
+  G --> A[Answer with sources]
+```
+
 ## Why it is built this way
 
 Most RAG demos hard-wire one embedding model and one LLM vendor, so they
@@ -71,6 +84,10 @@ hit@3     : 100.00%
 MRR       : 1.000
 ```
 
+These numbers are a deterministic smoke-test result on six labelled questions
+and three small sample documents. They prove the evaluation wiring and guard
+against regressions; they are not presented as a production-quality benchmark.
+
 Add your own `{"question": ..., "source": ...}` pairs and the same command
 gives you a regression signal for any change to chunk size, overlap, or
 embedding backend. CI runs it on every push.
@@ -83,6 +100,7 @@ embedding backend. CI runs it on every push.
 | `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | sentence-transformers model id |
 | `EMBEDDING_DIM` | `512` | dimension of the hashing embedder |
 | `INDEX_DIR` | `artifacts/index` | index loaded at API startup |
+| `MAX_UPLOAD_BYTES` | `10485760` | maximum accepted upload size |
 | `AZURE_OPENAI_API_KEY` / `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_DEPLOYMENT` | — | enables LLM generation |
 
 ## Layout
@@ -97,8 +115,15 @@ src/ragdoc/
   api.py          FastAPI app
   cli.py          `ragdoc ingest` / `ragdoc ask`
 scripts/evaluate_retrieval.py   hit-rate@k and MRR
-tests/            17 tests, no network required
+tests/            19 tests, no network required
 ```
+
+## Production considerations
+
+Uploaded indexes are persisted to `INDEX_DIR`, filenames are reduced to safe
+basenames, and upload size is capped. A multi-user deployment should add
+authentication, tenant isolation, durable object storage, request-level
+observability, and a shared index service before scaling to multiple workers.
 
 ## Tests
 

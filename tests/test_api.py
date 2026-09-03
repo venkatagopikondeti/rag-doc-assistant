@@ -28,7 +28,8 @@ def test_unsupported_upload_rejected():
     assert client().post("/ingest", files=files).status_code == 400
 
 
-def test_ingest_then_query():
+def test_ingest_then_query(tmp_path, monkeypatch):
+    monkeypatch.setattr(api, "INDEX_DIR", tmp_path / "index")
     c = client()
     payload = (
         b"Airflow orchestrates data pipelines as directed acyclic graphs.\n\n"
@@ -43,3 +44,24 @@ def test_ingest_then_query():
     body = answer.json()
     assert body["sources"]
     assert "faiss" in body["answer"].lower()
+    assert (tmp_path / "index" / "chunks.json").exists()
+    assert (tmp_path / "index" / "vectors.npy").exists()
+
+
+def test_upload_filename_is_reduced_to_a_basename(tmp_path, monkeypatch):
+    monkeypatch.setattr(api, "INDEX_DIR", tmp_path / "index")
+    response = client().post(
+        "/ingest",
+        files={"file": ("../../notes.md", io.BytesIO(b"safe content"), "text/markdown")},
+    )
+    assert response.status_code == 200
+    assert api.pipeline.store.chunks[0].source == "notes.md"
+
+
+def test_oversized_upload_is_rejected(tmp_path, monkeypatch):
+    monkeypatch.setattr(api, "INDEX_DIR", tmp_path / "index")
+    monkeypatch.setattr(api, "MAX_UPLOAD_BYTES", 4)
+    response = client().post(
+        "/ingest", files={"file": ("notes.md", io.BytesIO(b"too large"), "text/markdown")}
+    )
+    assert response.status_code == 413
