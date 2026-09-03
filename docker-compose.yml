@@ -1,0 +1,10 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      EMBEDDING_BACKEND: ${EMBEDDING_BACKEND:-hashing}
+      INDEX_DIR: /app/artifacts/index
+    volumes:
+      - ./artifacts:/app/artifacts

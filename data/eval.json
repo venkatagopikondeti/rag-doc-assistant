@@ -1,0 +1,8 @@
+[
+  {"question": "how do I compare two training runs", "source": "mlflow.md"},
+  {"question": "what does the model registry add", "source": "mlflow.md"},
+  {"question": "which index does exact inner product search", "source": "faiss.md"},
+  {"question": "how do approximate vector indexes trade recall for speed", "source": "faiss.md"},
+  {"question": "how are rolling updates rolled back", "source": "kubernetes.md"},
+  {"question": "what adjusts the number of replicas automatically", "source": "kubernetes.md"}
+]
