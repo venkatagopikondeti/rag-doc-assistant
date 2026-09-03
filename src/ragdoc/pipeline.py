@@ -20,7 +20,9 @@ def read_document(path: Path) -> str:
 
 
 class RagPipeline:
-    def __init__(self, store: VectorStore | None = None, generator: Generator | None = None) -> None:
+    def __init__(
+        self, store: VectorStore | None = None, generator: Generator | None = None
+    ) -> None:
         self.store = store or VectorStore()
         self.generator = generator or get_generator()
 
@@ -29,7 +31,11 @@ class RagPipeline:
         files = (
             [path]
             if path.is_file()
-            else [p for p in sorted(path.rglob("*")) if p.suffix.lower() in SUPPORTED_SUFFIXES]
+            else [
+                p
+                for p in sorted(path.rglob("*"))
+                if p.suffix.lower() in SUPPORTED_SUFFIXES
+            ]
         )
         added = 0
         for file in files:

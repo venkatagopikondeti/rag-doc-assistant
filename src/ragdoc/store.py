@@ -56,7 +56,7 @@ class VectorStore:
         self._ensure_index()
         if self._index is not None:
             scores, ids = self._index.search(qvec, k)
-            pairs = zip(ids[0].tolist(), scores[0].tolist())
+            pairs = zip(ids[0].tolist(), scores[0].tolist(), strict=True)
         else:
             sims = (self._matrix @ qvec[0]).tolist()
             order = sorted(range(len(sims)), key=lambda i: sims[i], reverse=True)[:k]
@@ -74,7 +74,7 @@ class VectorStore:
             pickle.dump(self._matrix, fh)
 
     @classmethod
-    def load(cls, directory: str | Path, embedder: Embedder | None = None) -> "VectorStore":
+    def load(cls, directory: str | Path, embedder: Embedder | None = None) -> VectorStore:
         path = Path(directory)
         store = cls(embedder)
         raw = json.loads((path / "chunks.json").read_text(encoding="utf-8"))

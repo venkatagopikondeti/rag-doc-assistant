@@ -30,7 +30,10 @@ def test_unsupported_upload_rejected():
 
 def test_ingest_then_query():
     c = client()
-    payload = b"Airflow orchestrates data pipelines as directed acyclic graphs.\n\nFAISS is a vector similarity search library."
+    payload = (
+        b"Airflow orchestrates data pipelines as directed acyclic graphs.\n\n"
+        b"FAISS is a vector similarity search library."
+    )
     upload = c.post("/ingest", files={"file": ("notes.md", io.BytesIO(payload), "text/markdown")})
     assert upload.status_code == 200
     assert upload.json()["chunks_added"] >= 1
